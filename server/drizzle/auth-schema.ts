@@ -1,7 +1,7 @@
 import { defineRelationsPart, sql } from 'drizzle-orm'
 import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
 
-export const user = sqliteTable('user', {
+export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
@@ -11,7 +11,7 @@ export const user = sqliteTable('user', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`).$onUpdate(() => /* @__PURE__ */ new Date()).notNull()
 })
 
-export const session = sqliteTable('session', {
+export const sessions = sqliteTable('sessions', {
   id: text('id').primaryKey(),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
   token: text('token').notNull().unique(),
@@ -19,16 +19,16 @@ export const session = sqliteTable('session', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).$onUpdate(() => /* @__PURE__ */ new Date()).notNull(),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
-  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' })
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' })
 }, table => [
-  index('session_userId_idx').on(table.userId)
+  index('sessions_userId_idx').on(table.userId)
 ])
 
-export const account = sqliteTable('account', {
+export const accounts = sqliteTable('accounts', {
   id: text('id').primaryKey(),
   accountId: text('account_id').notNull(),
   providerId: text('provider_id').notNull(),
-  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   accessToken: text('access_token'),
   refreshToken: text('refresh_token'),
   idToken: text('id_token'),
@@ -39,10 +39,10 @@ export const account = sqliteTable('account', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).$onUpdate(() => /* @__PURE__ */ new Date()).notNull()
 }, table => [
-  index('account_userId_idx').on(table.userId)
+  index('accounts_userId_idx').on(table.userId)
 ])
 
-export const verification = sqliteTable('verification', {
+export const verifications = sqliteTable('verifications', {
   id: text('id').primaryKey(),
   identifier: text('identifier').notNull(),
   value: text('value').notNull(),
@@ -50,30 +50,30 @@ export const verification = sqliteTable('verification', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`).$onUpdate(() => /* @__PURE__ */ new Date()).notNull()
 }, table => [
-  index('verification_identifier_idx').on(table.identifier)
+  index('verifications_identifier_idx').on(table.identifier)
 ])
 
-export const authRelations = defineRelationsPart({ user, session, account, verification }, r => ({
-  user: {
-    sessions: r.many.session({
-      from: r.user.id,
-      to: r.session.userId
+export const authRelations = defineRelationsPart({ users, sessions, accounts, verifications }, r => ({
+  users: {
+    sessions: r.many.sessions({
+      from: r.users.id,
+      to: r.sessions.userId
     }),
-    accounts: r.many.account({
-      from: r.user.id,
-      to: r.account.userId
+    accounts: r.many.accounts({
+      from: r.users.id,
+      to: r.accounts.userId
     })
   },
-  session: {
-    user: r.one.user({
-      from: r.session.userId,
-      to: r.user.id
+  sessions: {
+    user: r.one.users({
+      from: r.sessions.userId,
+      to: r.users.id
     })
   },
-  account: {
-    user: r.one.user({
-      from: r.account.userId,
-      to: r.user.id
+  accounts: {
+    user: r.one.users({
+      from: r.accounts.userId,
+      to: r.users.id
     })
   }
 }))

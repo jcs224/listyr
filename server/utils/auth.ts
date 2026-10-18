@@ -9,6 +9,7 @@ const turso = await getTursoDb()
 export const auth = betterAuth({
   database: drizzleAdapter(getDrizzleDb(turso), {
     provider: 'sqlite',
-    schema: authSchema
+    schema: authSchema,
+    usePlural: true
   })
 })
