@@ -6,10 +6,18 @@ import * as authSchema from '../drizzle/auth-schema'
 
 const turso = await getTursoDb()
 
+const config = useRuntimeConfig()
+
 export const auth = betterAuth({
   database: drizzleAdapter(getDrizzleDb(turso), {
     provider: 'sqlite',
     schema: authSchema,
     usePlural: true
-  })
+  }),
+  socialProviders: {
+    google: {
+      clientId: config.google.clientId,
+      clientSecret: config.google.clientSecret
+    }
+  }
 })
