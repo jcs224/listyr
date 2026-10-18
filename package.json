@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.17.0",
+    "@types/node": "^26.6.5",
     "drizzle-kit": "1.0.0-rc.4",
     "eslint": "^10.12.0",
     "eslint-plugin-better-tailwindcss": "^4.9.0",
