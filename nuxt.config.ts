@@ -24,6 +24,14 @@ export default defineNuxtConfig({
     '/': { prerender: true }
   },
 
+  nitro: {
+    esbuild: {
+      options: {
+        target: 'es2022'
+      }
+    }
+  },
+
   compatibilityDate: '2026-06-30',
 
   eslint: {
