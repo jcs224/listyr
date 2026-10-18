@@ -1,0 +1,16 @@
+diff --git a/dist/promise.js b/dist/promise.js
+index 608947e983173d76f24c164dbc622836c2ed2db6..37ee7c4080b27968825fc12c2668f6bc86c102a6 100644
+--- a/dist/promise.js
++++ b/dist/promise.js
+@@ -18,6 +18,11 @@ function getCipherValue(cipher) {
+ }
+ class Database extends DatabasePromise {
+     constructor(path, opts = {}) {
++        // Enable experimental multiprocess WAL by default so that multiple
++        // processes (app, drizzle-kit studio, migrations) can share the file.
++        if (path !== ':memory:' && !(opts.experimental ?? []).includes('multiprocess_wal')) {
++            opts = { ...opts, experimental: [...(opts.experimental ?? []), 'multiprocess_wal'] };
++        }
+         const nativeOpts = { ...opts };
+         if (opts.encryption) {
+             nativeOpts.encryption = {
