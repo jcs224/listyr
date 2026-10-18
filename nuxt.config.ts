@@ -5,11 +5,20 @@ export default defineNuxtConfig({
     '@nuxt/ui'
   ],
 
+  ssr: false,
+
   devtools: {
     enabled: true
   },
 
   css: ['~/assets/css/main.css'],
+
+  runtimeConfig: {
+    google: {
+      clientId: '',
+      clientSecret: ''
+    }
+  },
 
   routeRules: {
     '/': { prerender: true }
