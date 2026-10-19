@@ -4,12 +4,10 @@ import { getTursoDb } from './turso'
 import { getDrizzleDb } from './drizzle'
 import * as authSchema from '../drizzle/auth-schema'
 
-const turso = await getTursoDb()
-
 const config = useRuntimeConfig()
 
 export const auth = betterAuth({
-  database: drizzleAdapter(getDrizzleDb(turso), {
+  database: drizzleAdapter(getDrizzleDb(), {
     provider: 'sqlite',
     schema: authSchema,
     usePlural: true
