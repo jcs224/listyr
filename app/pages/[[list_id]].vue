@@ -21,6 +21,15 @@ async function addTodo() {
 
   todos.value.push(todo)
 }
+
+async function deleteTodo(id: string) {
+  await $fetch('/api/posts/' + id, {
+    method: 'delete'
+  })
+
+  const todoIndex = todos.value.findIndex(td => td.id === id)
+  todos.value.splice(todoIndex, 1)
+}
 </script>
 
 <template>
@@ -51,6 +60,7 @@ async function addTodo() {
             size="xs"
             color="error"
             icon="i-lucide-x"
+            @click="deleteTodo(todo.id)"
           />
         </div>
       </div>
