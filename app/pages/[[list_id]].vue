@@ -10,6 +10,7 @@ const todos = ref(todosInitial.value)
 // Add todo
 const newTodoText = ref('')
 const newTodoModalOpen = ref(false)
+const newTodoInput = useTemplateRef('newTodoInput')
 
 async function addTodo() {
   const todo = await $fetch('/api/posts',
@@ -22,6 +23,11 @@ async function addTodo() {
   )
 
   todos.value.push(todo)
+
+  newTodoText.value = ''
+  setTimeout(() => {
+    newTodoInput.value?.inputRef?.focus()
+  }, 0)
 }
 
 // Delete todo
@@ -131,6 +137,7 @@ async function updateTodo() {
           @submit="addTodo"
         >
           <UInput
+            ref="newTodoInput"
             v-model="newTodoText"
             class="w-full"
             placeholder="Pair of socks..."
