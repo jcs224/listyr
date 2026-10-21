@@ -74,10 +74,8 @@ async function updateTodo() {
 
   if (updatedTodo) {
     const todoIndex = todos.value.findIndex(td => td.id === editTodoId.value)
-
-    console.log(updatedTodo)
-
     todos.value[todoIndex].text = updatedTodo.text
+    editTodoModalOpen.value = false
   }
 }
 </script>
@@ -155,7 +153,7 @@ async function updateTodo() {
 
     <UModal
       v-model:open="editTodoModalOpen"
-      :title="`Edit ${editTodoText}`"
+      title="Edit todo"
       @after:leave="afterEditModalLeave"
     >
       <template #body>
@@ -167,6 +165,7 @@ async function updateTodo() {
           <UInput
             v-model="editTodoText"
             class="w-full"
+            autofocus="true"
           />
 
           <UButton
