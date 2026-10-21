@@ -3,9 +3,11 @@ definePageMeta({ middleware: 'auth' })
 
 const { data: session } = await authClient.useSession(useFetch)
 
+// Load todos
 const { data: todosInitial } = await useFetch('/api/posts')
 const todos = ref(todosInitial.value)
 
+// Add todo
 const newTodoText = ref('')
 const newTodoModalOpen = ref(false)
 
@@ -22,6 +24,7 @@ async function addTodo() {
   todos.value.push(todo)
 }
 
+// Delete todo
 async function deleteTodo(id: string) {
   await $fetch('/api/posts/' + id, {
     method: 'delete'
@@ -29,6 +32,47 @@ async function deleteTodo(id: string) {
 
   const todoIndex = todos.value.findIndex(td => td.id === id)
   todos.value.splice(todoIndex, 1)
+}
+
+// Edit todo
+const editTodoId = ref('')
+const editTodoText = ref('')
+const editTodoModalOpen = ref(false)
+
+watch(editTodoId, (value: string) => {
+  if (value) {
+    editTodoModalOpen.value = true
+    editTodoText.value = todos.value.filter(td => td.id === value)[0].text
+  } else {
+    editTodoModalOpen.value = false
+  }
+})
+
+watch(editTodoModalOpen, (value: boolean) => {
+  if (!value) {
+    editTodoId.value = ''
+  }
+})
+
+function afterEditModalLeave() {
+  editTodoText.value = ''
+}
+
+async function updateTodo() {
+  const updatedTodo = await $fetch('/api/posts/' + editTodoId.value, {
+    method: 'put',
+    body: {
+      text: editTodoText.value
+    }
+  })
+
+  if (updatedTodo) {
+    const todoIndex = todos.value.findIndex(td => td.id === editTodoId.value)
+
+    console.log(updatedTodo)
+
+    todos.value[todoIndex].text = updatedTodo.text
+  }
 }
 </script>
 
@@ -55,6 +99,7 @@ async function deleteTodo(id: string) {
             size="xs"
             color="info"
             icon="i-lucide-pencil"
+            @click="editTodoId = todo.id"
           />
           <UButton
             size="xs"
@@ -96,6 +141,30 @@ async function deleteTodo(id: string) {
             type="submit"
             icon="i-lucide-plus"
             label="Add"
+          />
+        </UForm>
+      </template>
+    </UModal>
+
+    <UModal
+      v-model:open="editTodoModalOpen"
+      :title="`Edit ${editTodoText}`"
+      @after:leave="afterEditModalLeave"
+    >
+      <template #body>
+        <UForm
+          :state="{ text: editTodoText }"
+          class="flex flex-col items-end gap-2"
+          @submit="updateTodo"
+        >
+          <UInput
+            v-model="editTodoText"
+            class="w-full"
+          />
+
+          <UButton
+            type="submit"
+            label="Update"
           />
         </UForm>
       </template>
