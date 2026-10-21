@@ -82,8 +82,6 @@ async function updateTodo() {
 
 <template>
   <div>
-    <h1>{{ session.user.name }}'s todos</h1>
-
     <!-- <ul
       v-for="todo in todos"
       :key="todo.id"
