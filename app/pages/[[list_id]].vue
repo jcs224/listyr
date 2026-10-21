@@ -27,12 +27,34 @@ async function addTodo() {
   <div>
     <h1>{{ session.user.name }}'s todos</h1>
 
-    <ul
+    <!-- <ul
       v-for="todo in todos"
       :key="todo.id"
     >
       <li>{{ todo.text }}</li>
-    </ul>
+    </ul> -->
+
+    <div class="flex flex-col gap-2 p-2">
+      <div
+        v-for="todo in todos"
+        :key="todo.id"
+        class="flex justify-between w-full p-2 border border-muted rounded"
+      >
+        {{ todo.text }}
+        <div class="flex gap-2">
+          <UButton
+            size="xs"
+            color="info"
+            icon="i-lucide-pencil"
+          />
+          <UButton
+            size="xs"
+            color="error"
+            icon="i-lucide-x"
+          />
+        </div>
+      </div>
+    </div>
 
     <UButton
       icon="i-lucide-plus"
