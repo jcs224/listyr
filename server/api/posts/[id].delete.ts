@@ -2,18 +2,24 @@ import { eq } from 'drizzle-orm'
 import { todos } from '~~/server/drizzle/schema'
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers })
-  if (!session?.user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  const session = await enforceAuth(event)
 
   const id = getRouterParam(event, 'id')
 
   const db = getDrizzleDb()
 
-  await db.delete(todos).where(eq(todos.id, id))
+  const todoQuery = await db.select().from(todos).where(eq(todos.id, id))
 
-  setResponseStatus(event, 204)
+  if (todoQuery.length === 1 && todoQuery[0].ownerId === session.user.id) {
+    await db.delete(todos).where(eq(todos.id, id))
 
-  return null
+    setResponseStatus(event, 204)
+
+    return null
+  } else {
+    throw createError({
+      status: 404,
+      statusText: 'No record to delete'
+    })
+  }
 })
