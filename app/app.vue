@@ -3,7 +3,7 @@ const { height } = useWindowSize()
 
 const { data: session } = await authClient.useSession(useFetch)
 
-const sidebarOpen = ref(false)
+const sidebarOpen = ref(true)
 </script>
 
 <template>
@@ -21,10 +21,6 @@ const sidebarOpen = ref(false)
           aria-label="Toggle sidebar"
           @click="sidebarOpen = true"
         />
-
-        <h2 class="text-xl">
-          {{ pageTitle }}
-        </h2>
       </div>
       <div class="flex-1 flex min-h-0">
         <USidebar

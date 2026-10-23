@@ -31,14 +31,32 @@ async function addTodo() {
 }
 
 // Delete todo
-async function deleteTodo(id: string) {
-  await $fetch('/api/posts/' + id, {
+const deleteTodoId = ref('')
+const deleteTodoModalOpen = ref(false)
+
+async function deleteTodo() {
+  await $fetch('/api/posts/' + deleteTodoId.value, {
     method: 'delete'
   })
 
-  const todoIndex = todos.value.findIndex(td => td.id === id)
+  const todoIndex = todos.value.findIndex(td => td.id === deleteTodoId.value)
   todos.value.splice(todoIndex, 1)
+  deleteTodoId.value = ''
 }
+
+watch(deleteTodoId, (value: string) => {
+  if (value) {
+    deleteTodoModalOpen.value = true
+  } else {
+    deleteTodoModalOpen.value = false
+  }
+})
+
+watch(deleteTodoModalOpen, (value: boolean) => {
+  if (!value) {
+    deleteTodoId.value = ''
+  }
+})
 
 // Edit todo
 const editTodoId = ref('')
@@ -107,7 +125,7 @@ async function updateTodo() {
             size="xs"
             color="error"
             icon="i-lucide-x"
-            @click="deleteTodo(todo.id)"
+            @click="deleteTodoId = todo.id"
           />
         </div>
       </div>
@@ -163,7 +181,7 @@ async function updateTodo() {
           <UInput
             v-model="editTodoText"
             class="w-full"
-            autofocus="true"
+            :autofocus="true"
           />
 
           <UButton
@@ -171,6 +189,23 @@ async function updateTodo() {
             label="Update"
           />
         </UForm>
+      </template>
+    </UModal>
+
+    <UModal
+      v-model:open="deleteTodoModalOpen"
+      title="Delete todo"
+    >
+      <template #body>
+        Are you sure you want to delete this todo? This action cannot be undone.
+      </template>
+
+      <template #footer>
+        <UButton
+          color="error"
+          label="Delete"
+          @click="deleteTodo"
+        />
       </template>
     </UModal>
   </div>
