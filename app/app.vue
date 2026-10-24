@@ -1,4 +1,8 @@
 <script setup>
+const mode = useColorMode()
+
+mode.value = 'auto'
+
 const { height } = useWindowSize()
 
 const { data: session } = await authClient.useSession(useFetch)
