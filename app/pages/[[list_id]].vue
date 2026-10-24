@@ -96,6 +96,19 @@ async function updateTodo() {
     editTodoModalOpen.value = false
   }
 }
+
+// Complete/uncomplete todo
+
+async function toggleTodo(id: string) {
+  const updatedTodo = await $fetch(`/api/posts/${id}/toggle`, {
+    method: 'put'
+  })
+
+  if (updatedTodo) {
+    const todoIndex = todos.value.findIndex(td => td.id === id)
+    todos.value[todoIndex].completedAt = updatedTodo.completedAt
+  }
+}
 </script>
 
 <template>
@@ -113,7 +126,17 @@ async function updateTodo() {
         :key="todo.id"
         class="flex justify-between w-full p-2 border border-muted rounded"
       >
-        {{ todo.text }}
+        <div class="flex items-center gap-2">
+          <UCheckbox
+            :model-value="!!todo.completedAt"
+            @change="toggleTodo(todo.id)"
+          />
+          <span
+            :class="{ 'line-through text-muted': !!todo.completedAt }"
+            class="cursor-pointer select-none"
+            @click="toggleTodo(todo.id)"
+          >{{ todo.text }}</span>
+        </div>
         <div class="flex gap-2">
           <UButton
             size="xs"

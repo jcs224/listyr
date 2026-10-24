@@ -8,5 +8,12 @@ export default defineEventHandler(async (event) => {
 
   const ownerTodos = await db.select().from(todos).where(eq(todos.ownerId, session.user.id))
 
-  return ownerTodos
+  const ownerTodosPrepped = ownerTodos.map((td) => {
+    return {
+      ...td,
+      completed: td.completedAt ? true : false
+    }
+  })
+
+  return ownerTodosPrepped
 })

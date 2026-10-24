@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
 
     const todo = await db.update(todos).set(body).where(eq(todos.id, id)).returning({
       id: todos.id,
-      text: todos.text
+      text: todos.text,
+      completedAt: todos.completedAt
     })
 
     return todo[0]
