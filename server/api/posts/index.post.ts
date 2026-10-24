@@ -7,8 +7,6 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event)
 
-  console.log(body)
-
   const todo = (await db.insert(todos).values({
     text: body.text,
     ownerId: session.user.id
