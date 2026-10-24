@@ -37,7 +37,7 @@ const sidebarOpen = ref(true)
 
               <UButton
                 label="Sign Out"
-                @click="signOut()"
+                @click="signOut"
               />
             </div>
             <UButton

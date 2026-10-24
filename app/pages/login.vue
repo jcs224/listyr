@@ -5,7 +5,7 @@ const { data: session } = await authClient.useSession(useFetch)
 <template>
   <div v-if="session">
     <p>Welcome, {{ session.user.name }}</p>
-    <button @click="authClient.signOut()">
+    <button @click="signOut">
       Sign out
     </button>
   </div>
