@@ -6,7 +6,7 @@ const { data: session } = await authClient.useSession(useFetch)
 const { status: sseStatus, data: sseData } = useAuthSse()
 
 // Load todos
-const { data: todosInitial } = await useFetch('/api/posts')
+const { data: todosInitial } = await useFetch('/api/todos')
 const todos = ref(todosInitial.value)
 
 // Add todo
@@ -15,7 +15,7 @@ const newTodoModalOpen = ref(false)
 const newTodoInput = useTemplateRef('newTodoInput')
 
 async function addTodo() {
-  const todo = await $fetch('/api/posts',
+  const todo = await $fetch('/api/todos',
     {
       method: 'post',
       body: {
@@ -35,7 +35,7 @@ const deleteTodoId = ref('')
 const deleteTodoModalOpen = ref(false)
 
 async function deleteTodo() {
-  await $fetch('/api/posts/' + deleteTodoId.value, {
+  await $fetch('/api/todos/' + deleteTodoId.value, {
     method: 'delete'
   })
 
@@ -81,7 +81,7 @@ function afterEditModalLeave() {
 }
 
 async function updateTodo() {
-  await $fetch('/api/posts/' + editTodoId.value, {
+  await $fetch('/api/todos/' + editTodoId.value, {
     method: 'put',
     body: {
       text: editTodoText.value
@@ -94,7 +94,7 @@ async function updateTodo() {
 // Complete/uncomplete todo
 
 async function toggleTodo(id: string) {
-  await $fetch(`/api/posts/${id}/toggle`, {
+  await $fetch(`/api/todos/${id}/toggle`, {
     method: 'put'
   })
 }
