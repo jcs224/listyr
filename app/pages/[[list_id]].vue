@@ -3,6 +3,8 @@ definePageMeta({ middleware: 'auth' })
 
 const { data: session } = await authClient.useSession(useFetch)
 
+const { status: sseStatus, data: sseData } = useAuthSse()
+
 // Load todos
 const { data: todosInitial } = await useFetch('/api/posts')
 const todos = ref(todosInitial.value)
@@ -22,8 +24,6 @@ async function addTodo() {
     }
   )
 
-  todos.value.push(todo)
-
   newTodoText.value = ''
   setTimeout(() => {
     newTodoInput.value?.inputRef?.focus()
@@ -39,8 +39,6 @@ async function deleteTodo() {
     method: 'delete'
   })
 
-  const todoIndex = todos.value.findIndex(td => td.id === deleteTodoId.value)
-  todos.value.splice(todoIndex, 1)
   deleteTodoId.value = ''
 }
 
@@ -83,18 +81,14 @@ function afterEditModalLeave() {
 }
 
 async function updateTodo() {
-  const updatedTodo = await $fetch('/api/posts/' + editTodoId.value, {
+  await $fetch('/api/posts/' + editTodoId.value, {
     method: 'put',
     body: {
       text: editTodoText.value
     }
   })
 
-  if (updatedTodo) {
-    const todoIndex = todos.value.findIndex(td => td.id === editTodoId.value)
-    todos.value[todoIndex].text = updatedTodo.text
-    editTodoModalOpen.value = false
-  }
+  editTodoModalOpen.value = false
 }
 
 // Complete/uncomplete todo
@@ -109,6 +103,29 @@ async function toggleTodo(id: string) {
     todos.value[todoIndex].completedAt = updatedTodo.completedAt
   }
 }
+
+watch(sseData, (value) => {
+  const { event, payload } = JSON.parse(value)
+
+  switch (event) {
+    case 'todo:add': {
+      todos.value.push(payload)
+      break
+    }
+
+    case 'todo:edit': {
+      const todoIndex = todos.value.findIndex(td => td.id === payload.id)
+      todos.value[todoIndex].text = payload.text
+      break
+    }
+
+    case 'todo:delete': {
+      const todoIndex = todos.value.findIndex(td => td.id === payload.id)
+      todos.value.splice(todoIndex, 1)
+      break
+    }
+  }
+})
 </script>
 
 <template>

@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { todos } from '~~/server/drizzle/schema'
 
 export default defineEventHandler(async (event) => {
+  const nitroApp = useNitroApp()
   const session = await enforceAuth(event)
 
   const id = getRouterParam(event, 'id')
@@ -15,7 +16,7 @@ export default defineEventHandler(async (event) => {
 
     setResponseStatus(event, 204)
 
-    return null
+    await nitroApp.hooks.callHook('todo:delete', { user: session.user.id, todo: { id } })
   } else {
     throw createError({
       status: 404,

@@ -1,7 +1,7 @@
 <script setup>
 const mode = useColorMode()
 
-mode.value = 'auto'
+mode.value = 'dark'
 
 const { height } = useWindowSize()
 
