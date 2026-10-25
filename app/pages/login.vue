@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+  layout: 'plain'
+})
+
 const { data: session } = await authClient.useSession(useFetch)
 </script>
 

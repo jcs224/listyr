@@ -8,6 +8,16 @@ const { height } = useWindowSize()
 const { data: session } = await authClient.useSession(useFetch)
 
 const sidebarOpen = ref(true)
+
+const listsMenu = ref([])
+
+const { data: listsInitial } = await useFetch('/api/lists')
+const lists = ref(listsInitial.value)
+
+listsMenu.value = lists.value.map(ls => ({
+  label: ls.name,
+  icon: 'i-lucide-clipboard-list'
+}))
 </script>
 
 <template>
@@ -30,6 +40,10 @@ const sidebarOpen = ref(true)
         <USidebar
           v-model:open="sidebarOpen"
         >
+          <UNavigationMenu
+            :items="listsMenu"
+            orientation="vertical"
+          />
           <template #footer>
             <div v-if="session">
               <UUser
@@ -51,7 +65,7 @@ const sidebarOpen = ref(true)
           </template>
         </USidebar>
         <div class="flex-1 min-w-0 overflow-y-auto">
-          <NuxtPage />
+          <slot />
         </div>
       </div>
     </div>
