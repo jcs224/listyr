@@ -21,6 +21,12 @@ export default defineEventHandler(async (event) => {
     }
   })
 
+  nitroApp.hooks.hook('todo:toggle', async (data) => {
+    if (session.user.id === data.user) {
+      await eventStream.push(JSON.stringify({ event: 'todo:toggle', payload: data.todo }))
+    }
+  })
+
   eventStream.onClosed(async () => {
     await eventStream.close()
   })

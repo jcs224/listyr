@@ -94,14 +94,9 @@ async function updateTodo() {
 // Complete/uncomplete todo
 
 async function toggleTodo(id: string) {
-  const updatedTodo = await $fetch(`/api/posts/${id}/toggle`, {
+  await $fetch(`/api/posts/${id}/toggle`, {
     method: 'put'
   })
-
-  if (updatedTodo) {
-    const todoIndex = todos.value.findIndex(td => td.id === id)
-    todos.value[todoIndex].completedAt = updatedTodo.completedAt
-  }
 }
 
 watch(sseData, (value) => {
@@ -123,6 +118,11 @@ watch(sseData, (value) => {
       const todoIndex = todos.value.findIndex(td => td.id === payload.id)
       todos.value.splice(todoIndex, 1)
       break
+    }
+
+    case 'todo:toggle': {
+      const todoIndex = todos.value.findIndex(td => td.id === payload.id)
+      todos.value[todoIndex].completedAt = payload.completedAt
     }
   }
 })
