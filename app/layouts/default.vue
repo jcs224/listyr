@@ -1,23 +1,48 @@
 <script setup>
-const mode = useColorMode()
-
-mode.value = 'auto'
+useDark()
 
 const { height } = useWindowSize()
 
 const { data: session } = await authClient.useSession(useFetch)
 
-const sidebarOpen = ref(true)
+const { status: sseStatus, data: sseData } = useAuthSse()
 
-const listsMenu = ref([])
+const sidebarOpen = ref(true)
 
 const { data: listsInitial } = await useFetch('/api/lists')
 const lists = ref(listsInitial.value)
 
-listsMenu.value = lists.value.map(ls => ({
-  label: ls.name,
-  icon: 'i-lucide-clipboard-list'
-}))
+const listsMenu = computed(() => {
+  return lists.value.map(ls => ({
+    label: ls.name,
+    icon: 'i-lucide-clipboard-list'
+  }))
+})
+
+const newListModalOpen = ref(false)
+const newListName = ref('')
+
+async function addList() {
+  await $fetch('/api/lists', {
+    method: 'post',
+    body: {
+      name: newListName.value
+    }
+  })
+
+  newListModalOpen.value = false
+}
+
+watch(sseData, (value) => {
+  const { event, payload } = JSON.parse(value)
+
+  switch (event) {
+    case 'list:add': {
+      lists.value.push(payload)
+      break
+    }
+  }
+})
 </script>
 
 <template>
@@ -44,6 +69,14 @@ listsMenu.value = lists.value.map(ls => ({
             :items="listsMenu"
             orientation="vertical"
           />
+
+          <UButton
+            label="Create list"
+            icon="i-lucide-plus"
+            class="flex justify-center"
+            @click="newListModalOpen = true"
+          />
+
           <template #footer>
             <div v-if="session">
               <UUser
@@ -69,5 +102,32 @@ listsMenu.value = lists.value.map(ls => ({
         </div>
       </div>
     </div>
+
+    <UModal
+      v-model:open="newListModalOpen"
+      title="New list"
+    >
+      <template #body>
+        <UForm
+          :state="{ text: newListName }"
+          class="flex flex-col items-end gap-2"
+          @submit="addList"
+        >
+          <UInput
+            ref="newTodoInput"
+            v-model="newListName"
+            class="w-full"
+            placeholder="Groceries..."
+            :autofocus="true"
+          />
+
+          <UButton
+            type="submit"
+            icon="i-lucide-plus"
+            label="Add"
+          />
+        </UForm>
+      </template>
+    </UModal>
   </UApp>
 </template>

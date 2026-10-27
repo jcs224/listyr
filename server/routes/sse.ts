@@ -27,6 +27,12 @@ export default defineEventHandler(async (event) => {
     }
   })
 
+  nitroApp.hooks.hook('list:add', async (data) => {
+    if (session.user.id === data.user) {
+      await eventStream.push(JSON.stringify({ event: 'list:add', payload: data.list }))
+    }
+  })
+
   eventStream.onClosed(async () => {
     await eventStream.close()
   })
