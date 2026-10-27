@@ -31,6 +31,7 @@ async function addList() {
   })
 
   newListModalOpen.value = false
+  newListName.value = ''
 }
 
 watch(sseData, (value) => {
@@ -106,6 +107,7 @@ watch(sseData, (value) => {
     <UModal
       v-model:open="newListModalOpen"
       title="New list"
+      :ui="{ overlay: 'z-[60]', content: 'z-[60]' }"
     >
       <template #body>
         <UForm
