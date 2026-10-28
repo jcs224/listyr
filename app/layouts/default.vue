@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 useDark()
 
 const { height } = useWindowSize()
@@ -20,6 +20,7 @@ const listsMenu = computed(() => {
   }))
 })
 
+// Add list
 const newListModalOpen = ref(false)
 const newListName = ref('')
 
@@ -35,6 +36,7 @@ async function addList() {
   newListName.value = ''
 }
 
+// Delete list
 const deleteListId = ref('')
 const deleteListModalOpen = ref(false)
 
@@ -60,6 +62,41 @@ watch(deleteListModalOpen, (value) => {
   }
 })
 
+// Edit list
+const editListId = ref('')
+const editListName = ref('')
+const editListModalOpen = ref(false)
+
+watch(editListId, (value) => {
+  if (value) {
+    editListModalOpen.value = true
+    editListName.value = lists.value.filter(ls => ls.id === value)[0].name
+  } else {
+    editListModalOpen.value = false
+  }
+})
+
+watch(editListModalOpen, (value) => {
+  if (!value) {
+    editListId.value = ''
+  }
+})
+
+function afterEditModalLeave() {
+  editListName.value = ''
+}
+
+async function updateList() {
+  await $fetch('/api/lists/' + editListId.value, {
+    method: 'put',
+    body: {
+      name: editListName.value
+    }
+  })
+
+  editListModalOpen.value = false
+}
+
 watch(sseData, (value) => {
   const { event, payload } = JSON.parse(value)
 
@@ -69,8 +106,14 @@ watch(sseData, (value) => {
       break
     }
 
+    case 'list:edit': {
+      const listIndex = lists.value.findIndex(ls => ls.id === payload.id)
+      lists.value[listIndex].name = payload.name
+      break
+    }
+
     case 'list:delete': {
-      const listIndex = lists.value.findIndex(td => td.id === payload.id)
+      const listIndex = lists.value.findIndex(ls => ls.id === payload.id)
       lists.value.splice(listIndex, 1)
       break
     }
@@ -105,6 +148,11 @@ watch(sseData, (value) => {
             <template #item-trailing="{ item }">
               <UDropdownMenu
                 :items="[
+                  {
+                    label: 'Edit',
+                    icon: 'i-lucide-pencil',
+                    onSelect: () => { editListId = item.id }
+                  },
                   {
                     label: 'Delete',
                     icon: 'i-lucide-trash',
@@ -175,13 +223,38 @@ watch(sseData, (value) => {
     </UModal>
 
     <UModal
+      v-model:open="editListModalOpen"
+      title="Edit list"
+      @after:leave="afterEditModalLeave"
+    >
+      <template #body>
+        <UForm
+          :state="{ name: editListName }"
+          class="flex flex-col items-end gap-2"
+          @submit="updateList"
+        >
+          <UInput
+            v-model="editListName"
+            class="w-full"
+            :autofocus="true"
+          />
+
+          <UButton
+            type="submit"
+            label="Update"
+          />
+        </UForm>
+      </template>
+    </UModal>
+
+    <UModal
       v-model:open="newListModalOpen"
       title="New list"
       :ui="{ overlay: 'z-[60]', content: 'z-[60]' }"
     >
       <template #body>
         <UForm
-          :state="{ text: newListName }"
+          :state="{ name: newListName }"
           class="flex flex-col items-end gap-2"
           @submit="addList"
         >
