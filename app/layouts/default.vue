@@ -14,6 +14,7 @@ const lists = ref(listsInitial.value)
 
 const listsMenu = computed(() => {
   return lists.value.map(ls => ({
+    id: ls.id,
     label: ls.name,
     icon: 'i-lucide-clipboard-list'
   }))
@@ -34,12 +35,43 @@ async function addList() {
   newListName.value = ''
 }
 
+const deleteListId = ref('')
+const deleteListModalOpen = ref(false)
+
+async function deleteList() {
+  await $fetch('/api/lists/' + deleteListId.value, {
+    method: 'delete'
+  })
+
+  deleteListId.value = ''
+}
+
+watch(deleteListId, (value) => {
+  if (value) {
+    deleteListModalOpen.value = true
+  } else {
+    deleteListModalOpen.value = false
+  }
+})
+
+watch(deleteListModalOpen, (value) => {
+  if (!value) {
+    deleteListId.value = ''
+  }
+})
+
 watch(sseData, (value) => {
   const { event, payload } = JSON.parse(value)
 
   switch (event) {
     case 'list:add': {
       lists.value.push(payload)
+      break
+    }
+
+    case 'list:delete': {
+      const listIndex = lists.value.findIndex(td => td.id === payload.id)
+      lists.value.splice(listIndex, 1)
       break
     }
   }
@@ -69,7 +101,27 @@ watch(sseData, (value) => {
           <UNavigationMenu
             :items="listsMenu"
             orientation="vertical"
-          />
+          >
+            <template #item-trailing="{ item }">
+              <UDropdownMenu
+                :items="[
+                  {
+                    label: 'Delete',
+                    icon: 'i-lucide-trash',
+                    onSelect: () => { deleteListId = item.id }
+                  }
+                ]"
+              >
+                <UButton
+                  icon="i-lucide-ellipsis-vertical"
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  aria-label="List actions"
+                />
+              </UDropdownMenu>
+            </template>
+          </UNavigationMenu>
 
           <UButton
             label="Create list"
@@ -105,6 +157,24 @@ watch(sseData, (value) => {
     </div>
 
     <UModal
+      v-model:open="deleteListModalOpen"
+      title="Delete list"
+      :ui="{ overlay: 'z-[60]', content: 'z-[60]' }"
+    >
+      <template #body>
+        Are you sure you want to delete the list item? This action cannot be undone!
+      </template>
+
+      <template #footer>
+        <UButton
+          color="error"
+          label="Delete"
+          @click="deleteList"
+        />
+      </template>
+    </UModal>
+
+    <UModal
       v-model:open="newListModalOpen"
       title="New list"
       :ui="{ overlay: 'z-[60]', content: 'z-[60]' }"
@@ -116,7 +186,7 @@ watch(sseData, (value) => {
           @submit="addList"
         >
           <UInput
-            ref="newTodoInput"
+            ref="newListInput"
             v-model="newListName"
             class="w-full"
             placeholder="Groceries..."
