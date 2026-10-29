@@ -1,6 +1,8 @@
 <script setup lang="ts">
 useDark()
 
+const route = useRoute()
+
 const { height } = useWindowSize()
 
 const { data: session } = await authClient.useSession(useFetch)
@@ -13,11 +15,22 @@ const { data: listsInitial } = await useFetch('/api/lists')
 const lists = ref(listsInitial.value)
 
 const listsMenu = computed(() => {
-  return lists.value.map(ls => ({
+  const userLists = lists.value.map(ls => ({
     id: ls.id,
     label: ls.name,
-    icon: 'i-lucide-clipboard-list'
+    icon: 'i-lucide-clipboard-list',
+    to: `/${ls.id}`
   }))
+
+  return [
+    {
+      label: 'Default',
+      icon: 'i-lucide-home',
+      to: '/',
+      active: !route.params.list_id
+    },
+    ...userLists
+  ]
 })
 
 // Add list
@@ -147,6 +160,7 @@ watch(sseData, (value) => {
           >
             <template #item-trailing="{ item }">
               <UDropdownMenu
+                v-if="item.id"
                 :items="[
                   {
                     label: 'Edit',
@@ -225,6 +239,7 @@ watch(sseData, (value) => {
     <UModal
       v-model:open="editListModalOpen"
       title="Edit list"
+      :ui="{ overlay: 'z-[60]', content: 'z-[60]' }"
       @after:leave="afterEditModalLeave"
     >
       <template #body>

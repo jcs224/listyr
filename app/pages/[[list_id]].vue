@@ -1,12 +1,21 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
 
+const route = useRoute()
+
 const { data: session } = await authClient.useSession(useFetch)
 
 const { status: sseStatus, data: sseData } = useAuthSse()
 
 // Load todos
-const { data: todosInitial } = await useFetch('/api/todos')
+
+let todoRoute = '/api/todos'
+
+if (route.params.list_id) {
+  todoRoute = '/api/lists/' + route.params.list_id + '/todos'
+}
+
+const { data: todosInitial } = await useFetch(todoRoute)
 const todos = ref(todosInitial.value)
 
 // Add todo
