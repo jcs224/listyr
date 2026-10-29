@@ -10,10 +10,12 @@ export default defineEventHandler(async (event) => {
 
   const todo = (await db.insert(todos).values({
     text: body.text,
-    ownerId: session.user.id
+    ownerId: session.user.id,
+    listId: body.listId
   }).returning({
     id: todos.id,
-    text: todos.text
+    text: todos.text,
+    listId: todos.listId
   }))[0]
 
   await nitroApp.hooks.callHook('todo:add', { user: session.user.id, todo })

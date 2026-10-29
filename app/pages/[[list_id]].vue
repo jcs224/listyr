@@ -24,11 +24,14 @@ const newTodoModalOpen = ref(false)
 const newTodoInput = useTemplateRef('newTodoInput')
 
 async function addTodo() {
+  const listId = route.params.list_id || null
+
   const todo = await $fetch('/api/todos',
     {
       method: 'post',
       body: {
-        text: newTodoText.value
+        text: newTodoText.value,
+        listId
       }
     }
   )
