@@ -1,4 +1,4 @@
-import { lists } from '~~/server/drizzle/schema'
+import { lists, listUser } from '~~/server/drizzle/schema'
 
 export default defineEventHandler(async (event) => {
   const nitroApp = useNitroApp()
@@ -13,6 +13,11 @@ export default defineEventHandler(async (event) => {
     id: lists.id,
     name: lists.name
   }))[0]
+
+  await db.insert(listUser).values({
+    userId: session.user.id,
+    listId: list.id
+  })
 
   await nitroApp.hooks.callHook('list:add', { user: session.user.id, list })
 })

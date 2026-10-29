@@ -1,5 +1,5 @@
 import { v7 as uuidv7 } from 'uuid'
-import { sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, primaryKey } from 'drizzle-orm/sqlite-core'
 import { users } from './auth-schema'
 import { defineRelations } from 'drizzle-orm'
 
@@ -35,7 +35,12 @@ export const lists = sqliteTable('lists', {
   ownerId: text('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' })
 })
 
-export const relations = defineRelations({ users, todos, lists }, r => ({
+export const listUser = sqliteTable('list_user', {
+  listId: text('list_id').notNull().references(() => lists.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' })
+}, t => [primaryKey({ columns: [t.listId, t.userId] })])
+
+export const relations = defineRelations({ users, todos, lists, listUser }, r => ({
   todos: {
     user: r.one.users({
       from: r.todos.ownerId,
@@ -49,10 +54,18 @@ export const relations = defineRelations({ users, todos, lists }, r => ({
   },
 
   users: {
-    todos: r.many.todos()
+    todos: r.many.todos(),
+    lists: r.many.lists({
+      from: r.users.id.through(r.listUser.userId),
+      to: r.lists.id.through(r.listUser.listId)
+    })
   },
 
   lists: {
-    todos: r.many.todos()
+    todos: r.many.todos(),
+    users: r.many.users({
+      from: r.lists.id.through(r.listUser.listId),
+      to: r.users.id.through(r.listUser.userId)
+    })
   }
 }))
