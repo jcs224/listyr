@@ -1,4 +1,4 @@
-import { lists } from '~~/server/drizzle/schema'
+import { lists, listUser } from '~~/server/drizzle/schema'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -6,7 +6,17 @@ export default defineEventHandler(async (event) => {
 
   const db = getDrizzleDb()
 
-  const ownerLists = await db.select().from(lists).where(eq(lists.ownerId, session.user.id))
+  const userLists = await db
+    .select({
+      id: lists.id,
+      name: lists.name,
+      createdAt: lists.createdAt,
+      updatedAt: lists.updatedAt,
+      ownerId: lists.ownerId
+    })
+    .from(lists)
+    .innerJoin(listUser, eq(lists.id, listUser.listId))
+    .where(eq(listUser.userId, session.user.id))
 
-  return ownerLists
+  return userLists
 })

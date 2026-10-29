@@ -110,6 +110,37 @@ async function updateList() {
   editListModalOpen.value = false
 }
 
+// Share list
+
+const shareListId = ref('')
+const shareListEmail = ref('')
+const shareListModalOpen = ref(false)
+
+async function shareList() {
+  await $fetch('/api/lists/' + shareListId.value + '/share', {
+    method: 'put',
+    body: {
+      email: shareListEmail.value
+    }
+  })
+
+  shareListModalOpen.value = false
+}
+
+watch(shareListId, (value) => {
+  if (value) {
+    shareListModalOpen.value = true
+  } else {
+    shareListModalOpen.value = false
+  }
+})
+
+watch(shareListModalOpen, (value) => {
+  if (!value) {
+    shareListId.value = ''
+  }
+})
+
 watch(sseData, (value) => {
   const { event, payload } = JSON.parse(value)
 
@@ -129,6 +160,10 @@ watch(sseData, (value) => {
       const listIndex = lists.value.findIndex(ls => ls.id === payload.id)
       lists.value.splice(listIndex, 1)
       break
+    }
+
+    case 'list:share': {
+      lists.value.push(payload)
     }
   }
 })
@@ -171,6 +206,11 @@ watch(sseData, (value) => {
                     label: 'Delete',
                     icon: 'i-lucide-trash',
                     onSelect: () => { deleteListId = item.id }
+                  },
+                  {
+                    label: 'Share',
+                    icon: 'i-lucide-user',
+                    onSelect: () => { shareListId = item.id }
                   }
                 ]"
               >
@@ -278,6 +318,34 @@ watch(sseData, (value) => {
             v-model="newListName"
             class="w-full"
             placeholder="Groceries..."
+            :autofocus="true"
+          />
+
+          <UButton
+            type="submit"
+            icon="i-lucide-plus"
+            label="Add"
+          />
+        </UForm>
+      </template>
+    </UModal>
+
+    <UModal
+      v-model:open="shareListModalOpen"
+      title="Share list"
+      :ui="{ overlay: 'z-[60]', content: 'z-[60]' }"
+    >
+      <template #body>
+        <UForm
+          :state="{ email: shareListEmail }"
+          class="flex flex-col items-end gap-2"
+          @submit="shareList"
+        >
+          <UInput
+            ref="shareListInput"
+            v-model="shareListEmail"
+            class="w-full"
+            placeholder="joe@example.com"
             :autofocus="true"
           />
 

@@ -45,6 +45,12 @@ export default defineEventHandler(async (event) => {
     }
   })
 
+  nitroApp.hooks.hook('list:share', async (data) => {
+    if (session.user.id === data.receiver) {
+      await eventStream.push(JSON.stringify({ event: 'list:share', payload: data.list }))
+    }
+  })
+
   eventStream.onClosed(async () => {
     await eventStream.close()
   })
