@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     id: todos.id,
     text: todos.text,
     listId: todos.listId
-  }))[0]
+  }))[0]!
 
   await nitroApp.hooks.callHook('todo:add', { user: session.user.id, todo })
 })

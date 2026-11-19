@@ -17,10 +17,11 @@ export default defineEventHandler(async (event) => {
     const todo = await db.update(todos).set(body).where(eq(todos.id, id)).returning({
       id: todos.id,
       text: todos.text,
-      completedAt: todos.completedAt
+      completedAt: todos.completedAt,
+      listId: todos.listId
     })
 
-    await nitroApp.hooks.callHook('todo:edit', { user: session.user.id, todo: todo[0] })
+    await nitroApp.hooks.callHook('todo:edit', { user: session.user.id, todo: todo[0]! })
   } else {
     throw createError({
       status: 404,

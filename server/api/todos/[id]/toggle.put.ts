@@ -11,10 +11,10 @@ export default defineEventHandler(async (event) => {
 
   const todoQuery = await db.select().from(todos).where(eq(todos.id, id))
 
-  if (todoQuery.length === 1 && todoQuery[0].ownerId === session.user.id) {
+  if (todoQuery.length === 1 && todoQuery[0]!.ownerId === session.user.id) {
     let newCompletedValue = null
 
-    if (todoQuery[0].completedAt) {
+    if (todoQuery[0]!.completedAt) {
       newCompletedValue = null
     } else {
       newCompletedValue = new Date().toISOString()
@@ -24,10 +24,11 @@ export default defineEventHandler(async (event) => {
       completedAt: newCompletedValue
     }).where(eq(todos.id, id)).returning({
       id: todos.id,
-      completedAt: todos.completedAt
+      completedAt: todos.completedAt,
+      listId: todos.listId
     })
 
-    await nitroApp.hooks.callHook('todo:toggle', { user: session.user.id, todo: todo[0] })
+    await nitroApp.hooks.callHook('todo:toggle', { user: session.user.id, todo: todo[0]! })
   } else {
     throw createError({
       status: 404,

@@ -3,51 +3,55 @@ export default defineEventHandler(async (event) => {
   const session = await enforceAuth(event)
   const eventStream = createEventStream(event)
 
+  async function push(name: string, payload: unknown) {
+    await eventStream.push(JSON.stringify({ event: name, payload }))
+  }
+
   nitroApp.hooks.hook('todo:add', async (data) => {
-    if (session.user.id === data.user) {
-      await eventStream.push(JSON.stringify({ event: 'todo:add', payload: data.todo }))
+    if (await canSeeTodo(session.user.id, data.user, data.todo)) {
+      await push('todo:add', data.todo)
     }
   })
 
   nitroApp.hooks.hook('todo:edit', async (data) => {
-    if (session.user.id === data.user) {
-      await eventStream.push(JSON.stringify({ event: 'todo:edit', payload: data.todo }))
+    if (await canSeeTodo(session.user.id, data.user, data.todo)) {
+      await push('todo:edit', data.todo)
     }
   })
 
   nitroApp.hooks.hook('todo:delete', async (data) => {
-    if (session.user.id === data.user) {
-      await eventStream.push(JSON.stringify({ event: 'todo:delete', payload: data.todo }))
+    if (await canSeeTodo(session.user.id, data.user, data.todo)) {
+      await push('todo:delete', data.todo)
     }
   })
 
   nitroApp.hooks.hook('todo:toggle', async (data) => {
-    if (session.user.id === data.user) {
-      await eventStream.push(JSON.stringify({ event: 'todo:toggle', payload: data.todo }))
+    if (await canSeeTodo(session.user.id, data.user, data.todo)) {
+      await push('todo:toggle', data.todo)
     }
   })
 
   nitroApp.hooks.hook('list:add', async (data) => {
     if (session.user.id === data.user) {
-      await eventStream.push(JSON.stringify({ event: 'list:add', payload: data.list }))
+      await push('list:add', data.list)
     }
   })
 
   nitroApp.hooks.hook('list:edit', async (data) => {
-    if (session.user.id === data.user) {
-      await eventStream.push(JSON.stringify({ event: 'list:edit', payload: data.list }))
+    if (await canAccessList(session.user.id, data.list.id)) {
+      await push('list:edit', data.list)
     }
   })
 
   nitroApp.hooks.hook('list:delete', async (data) => {
-    if (session.user.id === data.user) {
-      await eventStream.push(JSON.stringify({ event: 'list:delete', payload: data.list }))
+    if (await canAccessList(session.user.id, data.list.id)) {
+      await push('list:delete', data.list)
     }
   })
 
   nitroApp.hooks.hook('list:share', async (data) => {
-    if (session.user.id === data.receiver) {
-      await eventStream.push(JSON.stringify({ event: 'list:share', payload: data.list }))
+    if (session.user.id === data.receiver || await canAccessList(session.user.id, data.list.id)) {
+      await push('list:share', data.list)
     }
   })
 

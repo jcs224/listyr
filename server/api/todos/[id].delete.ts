@@ -11,12 +11,12 @@ export default defineEventHandler(async (event) => {
 
   const todoQuery = await db.select().from(todos).where(eq(todos.id, id))
 
-  if (todoQuery.length === 1 && todoQuery[0].ownerId === session.user.id) {
+  if (todoQuery.length === 1 && todoQuery[0]!.ownerId === session.user.id) {
     await db.delete(todos).where(eq(todos.id, id))
 
     setResponseStatus(event, 204)
 
-    await nitroApp.hooks.callHook('todo:delete', { user: session.user.id, todo: { id } })
+    await nitroApp.hooks.callHook('todo:delete', { user: session.user.id, todo: { id: id!, listId: todoQuery[0]!.listId } })
   } else {
     throw createError({
       status: 404,

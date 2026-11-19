@@ -11,15 +11,15 @@ export default defineEventHandler(async (event) => {
   const db = getDrizzleDb()
 
   const listQuery = await db.select().from(lists).where(eq(lists.id, id))
-  const userId = (await db.select().from(users).where(eq(users.email, body.email)))[0].id
+  const userId = (await db.select().from(users).where(eq(users.email, body.email)))[0]!.id
 
-  if (listQuery.length === 1 && listQuery[0].ownerId === session.user.id) {
+  if (listQuery.length === 1 && listQuery[0]!.ownerId === session.user.id) {
     await db.insert(listUser).values({
       listId: id,
       userId
     })
 
-    await nitroApp.hooks.callHook('list:share', { initiator: session.user.id, receiver: userId, list: listQuery[0] })
+    await nitroApp.hooks.callHook('list:share', { initiator: session.user.id, receiver: userId, list: listQuery[0]! })
   } else {
     throw createError({
       status: 404,

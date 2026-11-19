@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   }).returning({
     id: lists.id,
     name: lists.name
-  }))[0]
+  }))[0]!
 
   await db.insert(listUser).values({
     userId: session.user.id,

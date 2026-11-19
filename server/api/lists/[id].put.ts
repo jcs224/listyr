@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
 
   const listQuery = await db.select().from(lists).where(eq(lists.id, id))
 
-  if (listQuery.length === 1 && listQuery[0].ownerId === session.user.id) {
+  if (listQuery.length === 1 && listQuery[0]!.ownerId === session.user.id) {
     const body = await readBody(event)
 
     const list = await db.update(lists).set(body).where(eq(lists.id, id)).returning({
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
       name: lists.name
     })
 
-    await nitroApp.hooks.callHook('list:edit', { user: session.user.id, list: list[0] })
+    await nitroApp.hooks.callHook('list:edit', { user: session.user.id, list: list[0]! })
   } else {
     throw createError({
       status: 404,
