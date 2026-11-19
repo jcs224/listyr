@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
 
   const todoQuery = await db.select().from(todos).where(eq(todos.id, id))
 
-  if (todoQuery.length === 1 && todoQuery[0]!.ownerId === session.user.id) {
+  if (todoQuery.length === 1 && await canToggleTodo(session.user.id, todoQuery[0]!.ownerId, todoQuery[0]!.listId)) {
     let newCompletedValue = null
 
     if (todoQuery[0]!.completedAt) {

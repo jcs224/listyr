@@ -45,6 +45,18 @@ export function canSeeTodo(userId: string, user: string, todo: TodoPayload) {
   return userId === user
 }
 
+/**
+ * Returns true if the user may toggle a todo's completion:
+ * they own the todo, or they can access its list (member or list owner).
+ */
+export async function canToggleTodo(userId: string, ownerId: string, listId?: string | null) {
+  if (userId === ownerId) {
+    return true
+  }
+
+  return canAccessList(userId, listId)
+}
+
 declare module 'nitropack/types' {
   interface NitroRuntimeHooks {
     'todo:add': (data: { user: string, todo: Partial<typeof todos.$inferSelect> }) => void | Promise<void>
