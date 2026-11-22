@@ -18,6 +18,18 @@ if (route.params.list_id) {
 const { data: todosInitial } = await useFetch(todoRoute)
 const todos = ref(todosInitial.value)
 
+// Incomplete todos first (in original order), completed todos last.
+// Sorts a copy so the reactive `todos` array is untouched (the SSE watcher
+// relies on its indexes).
+const sortedTodos = computed(() =>
+  [...todos.value].sort((a, b) => {
+    if (!!a.completedAt !== !!b.completedAt) {
+      return a.completedAt ? 1 : -1
+    }
+    return 0
+  })
+)
+
 // Add todo
 const newTodoText = ref('')
 const newTodoModalOpen = ref(false)
@@ -149,9 +161,13 @@ watch(sseData, (value) => {
       <li>{{ todo.text }}</li>
     </ul> -->
 
-    <div class="flex flex-col gap-2 p-2">
+    <TransitionGroup
+      tag="div"
+      name="list"
+      class="flex flex-col gap-2 p-2"
+    >
       <div
-        v-for="todo in todos"
+        v-for="todo in sortedTodos"
         :key="todo.id"
         class="flex justify-between w-full p-2 border border-muted rounded"
       >
@@ -181,7 +197,7 @@ watch(sseData, (value) => {
           />
         </div>
       </div>
-    </div>
+    </TransitionGroup>
 
     <UButton
       icon="i-lucide-plus"
@@ -262,3 +278,9 @@ watch(sseData, (value) => {
     </UModal>
   </div>
 </template>
+
+<style scoped>
+.list-move {
+  transition: transform 0.3s ease;
+}
+</style>
