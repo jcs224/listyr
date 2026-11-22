@@ -17,6 +17,7 @@ const lists = ref(listsInitial.value)
 const listsMenu = computed(() => {
   const userLists = lists.value.map(ls => ({
     id: ls.id,
+    ownerId: ls.ownerId,
     label: ls.name,
     icon: 'i-lucide-clipboard-list',
     to: `/${ls.id}`
@@ -195,7 +196,7 @@ watch(sseData, (value) => {
           >
             <template #item-trailing="{ item }">
               <UDropdownMenu
-                v-if="item.id"
+                v-if="item.id && item.ownerId === session?.user?.id"
                 :items="[
                   {
                     label: 'Edit',
