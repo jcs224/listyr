@@ -1,10 +1,26 @@
 import { connect } from '@tursodatabase/database'
+import { join } from 'node:path'
+import { stat, mkdir } from 'node:fs/promises'
 
-if (!process.env.DB_FILE_NAME) {
-  throw new Error('DB_FILE_NAME is not set')
+import envPaths from 'env-paths'
+
+async function directoryExists(dirPath: string): Promise<boolean> {
+  try {
+    const stats = await stat(dirPath)
+    return stats.isDirectory()
+  } catch {
+    return false
+  }
 }
 
-const db = await connect(process.env.DB_FILE_NAME, {
+const appPath = envPaths('listyr').data
+const dbPath = join(appPath, 'listyr.sqlite')
+
+if (!await directoryExists(appPath)) {
+  await mkdir(appPath)
+}
+
+const db = await connect(dbPath, {
   experimental: ['multiprocess_wal']
 })
 
