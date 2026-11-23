@@ -67,5 +67,6 @@ declare module 'nitropack/types' {
     'list:edit': (data: { user: string, list: Partial<typeof lists.$inferSelect> }) => void | Promise<void>
     'list:delete': (data: { user: string, list: { id: string } }) => void | Promise<void>
     'list:share': (data: { initiator: string, receiver: string, list: Partial<typeof lists.$inferSelect> }) => void | Promise<void>
+    'list:unshare': (data: { initiator: string, receiver: string, list: { id: string } }) => void | Promise<void>
   }
 }

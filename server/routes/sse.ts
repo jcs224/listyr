@@ -55,6 +55,12 @@ export default defineEventHandler(async (event) => {
     }
   })
 
+  nitroApp.hooks.hook('list:unshare', async (data) => {
+    if (session.user.id === data.receiver || await canAccessList(session.user.id, data.list.id)) {
+      await push('list:unshare', { id: data.list.id, userId: data.receiver })
+    }
+  })
+
   eventStream.onClosed(async () => {
     await eventStream.close()
   })

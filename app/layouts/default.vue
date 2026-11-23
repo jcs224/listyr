@@ -12,7 +12,7 @@ const { status: sseStatus, data: sseData } = useAuthSse()
 const sidebarOpen = ref(true)
 
 const { data: listsInitial } = await useFetch('/api/lists')
-const lists = ref(listsInitial.value)
+const lists = ref(listsInitial.value ?? [])
 
 const listsMenu = computed(() => {
   const userLists = lists.value.map(ls => ({
@@ -113,24 +113,87 @@ async function updateList() {
 
 // Share list
 
+interface SharedUser {
+  id: string
+  name: string
+  email: string
+  image: string | null
+}
+
+const toast = useToast()
+
 const shareListId = ref('')
 const shareListEmail = ref('')
 const shareListModalOpen = ref(false)
+const shareListOwner = ref<SharedUser | null>(null)
+const shareListUsers = ref<SharedUser[]>([])
+const shareListLoading = ref(false)
+
+function shareListErrorMessage(error: unknown) {
+  return (error as { data?: { message?: string } }).data?.message || 'Something went wrong'
+}
+
+async function fetchSharedUsers() {
+  shareListLoading.value = true
+
+  try {
+    const data = await $fetch<{ owner: SharedUser, users: SharedUser[] }>(`/api/lists/${shareListId.value}/share`)
+
+    shareListOwner.value = data.owner
+    shareListUsers.value = data.users
+  } catch (error) {
+    toast.add({
+      title: 'Could not load shared users',
+      description: shareListErrorMessage(error),
+      color: 'error'
+    })
+
+    shareListModalOpen.value = false
+  } finally {
+    shareListLoading.value = false
+  }
+}
 
 async function shareList() {
-  await $fetch('/api/lists/' + shareListId.value + '/share', {
-    method: 'put',
-    body: {
-      email: shareListEmail.value
-    }
-  })
+  try {
+    const user = await $fetch<SharedUser>('/api/lists/' + shareListId.value + '/share', {
+      method: 'put',
+      body: {
+        email: shareListEmail.value
+      }
+    })
 
-  shareListModalOpen.value = false
+    shareListUsers.value.push(user)
+    shareListEmail.value = ''
+  } catch (error) {
+    toast.add({
+      title: 'Could not share list',
+      description: shareListErrorMessage(error),
+      color: 'error'
+    })
+  }
+}
+
+async function unshareList(userId: string) {
+  try {
+    await $fetch(`/api/lists/${shareListId.value}/share/${userId}`, {
+      method: 'delete'
+    })
+
+    shareListUsers.value = shareListUsers.value.filter(user => user.id !== userId)
+  } catch (error) {
+    toast.add({
+      title: 'Could not remove user',
+      description: shareListErrorMessage(error),
+      color: 'error'
+    })
+  }
 }
 
 watch(shareListId, (value) => {
   if (value) {
     shareListModalOpen.value = true
+    fetchSharedUsers()
   } else {
     shareListModalOpen.value = false
   }
@@ -139,6 +202,9 @@ watch(shareListId, (value) => {
 watch(shareListModalOpen, (value) => {
   if (!value) {
     shareListId.value = ''
+    shareListEmail.value = ''
+    shareListOwner.value = null
+    shareListUsers.value = []
   }
 })
 
@@ -164,7 +230,23 @@ watch(sseData, (value) => {
     }
 
     case 'list:share': {
-      lists.value.push(payload)
+      if (!lists.value.some(ls => ls.id === payload.id)) {
+        lists.value.push(payload)
+      }
+
+      break
+    }
+
+    case 'list:unshare': {
+      if (payload.userId === session.value?.user?.id) {
+        lists.value = lists.value.filter(ls => ls.id !== payload.id)
+
+        if (route.params.list_id === payload.id) {
+          navigateTo('/')
+        }
+      } else if (shareListId.value === payload.id) {
+        shareListUsers.value = shareListUsers.value.filter(user => user.id !== payload.userId)
+      }
     }
   }
 })
@@ -337,25 +419,82 @@ watch(sseData, (value) => {
       :ui="{ overlay: 'z-[60]', content: 'z-[60]' }"
     >
       <template #body>
-        <UForm
-          :state="{ email: shareListEmail }"
-          class="flex flex-col items-end gap-2"
-          @submit="shareList"
-        >
-          <UInput
-            ref="shareListInput"
-            v-model="shareListEmail"
-            class="w-full"
-            placeholder="joe@example.com"
-            :autofocus="true"
-          />
+        <div class="flex flex-col gap-4">
+          <div
+            v-if="shareListLoading"
+            class="flex flex-col gap-2"
+          >
+            <USkeleton class="h-8 w-full" />
+            <USkeleton class="h-8 w-full" />
+          </div>
 
-          <UButton
-            type="submit"
-            icon="i-lucide-plus"
-            label="Add"
-          />
-        </UForm>
+          <ul
+            v-else
+            class="flex flex-col gap-2"
+          >
+            <li
+              v-if="shareListOwner"
+              class="flex items-center justify-between"
+            >
+              <UUser
+                :name="shareListOwner.name"
+                :description="shareListOwner.email"
+                :avatar="{ src: shareListOwner.image ?? undefined, alt: shareListOwner.name }"
+                size="sm"
+              />
+
+              <UBadge
+                label="Owner"
+                color="neutral"
+                variant="subtle"
+              />
+            </li>
+
+            <li
+              v-for="user in shareListUsers"
+              :key="user.id"
+              class="flex items-center justify-between"
+            >
+              <UUser
+                :name="user.name"
+                :description="user.email"
+                :avatar="{ src: user.image ?? undefined, alt: user.name }"
+                size="sm"
+              />
+
+              <UButton
+                icon="i-lucide-x"
+                color="error"
+                variant="ghost"
+                size="xs"
+                aria-label="Remove user"
+                @click="unshareList(user.id)"
+              />
+            </li>
+          </ul>
+
+          <USeparator />
+
+          <UForm
+            :state="{ email: shareListEmail }"
+            class="flex flex-col items-end gap-2"
+            @submit="shareList"
+          >
+            <UInput
+              ref="shareListInput"
+              v-model="shareListEmail"
+              class="w-full"
+              placeholder="joe@example.com"
+              :autofocus="true"
+            />
+
+            <UButton
+              type="submit"
+              icon="i-lucide-plus"
+              label="Add"
+            />
+          </UForm>
+        </div>
       </template>
     </UModal>
   </UApp>
